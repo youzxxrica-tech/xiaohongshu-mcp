@@ -14,7 +14,14 @@ import (
 )
 
 func main() {
+	var binPath string
+	flag.StringVar(&binPath, "bin", "", "浏览器二进制文件路径（留空则使用内置浏览器）")
 	flag.Parse()
+	resolvedBinPath, err := browser.SetBrowserBinPath(binPath)
+	if err != nil {
+		logrus.Fatalf("%v", err)
+	}
+	logrus.Infof("using browser binary: %s", resolvedBinPath)
 
 	// 登录的时候，需要界面，所以不能无头模式。
 	// 登录与后续运行共用同一个 seed：首次登录生成并写入会话文件，之后一直复用。

@@ -31,6 +31,48 @@ var browserVersionRaw string
 
 var browserVersion = strings.TrimSpace(browserVersionRaw)
 
+var configuredBrowserBinPath string
+
+// SetBrowserBinPath selects an explicit browser binary for this process.
+// An empty path keeps the upstream built-in browser behavior.
+func SetBrowserBinPath(path string) (string, error) {
+	if path == "" {
+		binPath, err := EnsureBrowser()
+		if err != nil {
+			return "", err
+		}
+		configuredBrowserBinPath = binPath
+		return binPath, nil
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("解析浏览器路径失败: %w", err)
+	}
+	info, err := os.Stat(absPath)
+	if err != nil {
+		return "", fmt.Errorf("浏览器二进制不可用 %q: %w", absPath, err)
+	}
+	if !info.Mode().IsRegular() {
+		return "", fmt.Errorf("浏览器路径不是普通文件: %q", absPath)
+	}
+	if info.Mode().Perm()&0o111 == 0 {
+		return "", fmt.Errorf("浏览器二进制不可执行: %q", absPath)
+	}
+
+	configuredBrowserBinPath = absPath
+	return absPath, nil
+}
+
+// BrowserBinPath returns the process-wide configured binary. It falls back to
+// the upstream built-in browser when startup did not explicitly configure one.
+func BrowserBinPath() (string, error) {
+	if configuredBrowserBinPath != "" {
+		return configuredBrowserBinPath, nil
+	}
+	return EnsureBrowser()
+}
+
 func browserURL(name string) string {
 	return browserCDNBase + "/" + browserVersion + "/" + name
 }

@@ -352,6 +352,9 @@ https://github.com/user-attachments/assets/cc385b6c-422c-489b-a5fc-63e92c695b80
 chmod +x xiaohongshu-login-darwin-arm64
 ./xiaohongshu-login-darwin-arm64
 
+# 使用系统 Chrome（例如公司 Mac）
+./xiaohongshu-login-darwin-arm64 -bin "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
 # 2. 然后启动 MCP 服务
 chmod +x xiaohongshu-mcp-darwin-arm64
 ./xiaohongshu-mcp-darwin-arm64
@@ -473,6 +476,9 @@ go run cmd/login/main.go
 
 # 非无头模式，有浏览器界面
 ./xiaohongshu-mcp-darwin-arm64 -headless=false
+
+# 使用系统 Chrome
+./xiaohongshu-mcp-darwin-arm64 -bin "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" -headless=false
 ```
 
 **使用源码**：

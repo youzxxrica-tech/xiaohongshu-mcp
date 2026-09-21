@@ -53,13 +53,11 @@ func NewBrowser(headless bool, options ...Option) *headless_browser.Browser {
 		opt(cfg)
 	}
 
-	// 只用内置浏览器，没有别的来源。二进制必须显式传给 go-rod，
-	// 否则 rod 会自行下载一个默认 Chromium：它不是内置浏览器，也不认识下面
-	// 这些 flag（未知 flag 被静默忽略，日志照样打印 "fingerprint enabled"），
-	// 属于无声降级。宁可不启动，也不启动一个不对的浏览器。
-	binPath, err := EnsureBrowser()
+	// 二进制必须显式传给 go-rod，避免它静默下载另一个 Chromium。
+	// 默认仍使用上游内置浏览器；启动参数 -bin 可选择系统 Chrome。
+	binPath, err := BrowserBinPath()
 	if err != nil {
-		panic(fmt.Sprintf("内置浏览器不可用，拒绝启动: %v", err))
+		panic(fmt.Sprintf("浏览器不可用，拒绝启动: %v", err))
 	}
 
 	opts := []headless_browser.Option{

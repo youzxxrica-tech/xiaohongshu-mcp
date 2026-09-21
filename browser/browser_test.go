@@ -1,6 +1,8 @@
 package browser
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,6 +27,35 @@ func TestMaskProxyCredentials(t *testing.T) {
 			assert.Equal(t, tt.want, maskProxyCredentials(tt.input))
 		})
 	}
+}
+
+func TestSetBrowserBinPath(t *testing.T) {
+	original := configuredBrowserBinPath
+	t.Cleanup(func() { configuredBrowserBinPath = original })
+
+	binPath := filepath.Join(t.TempDir(), "chrome")
+	assert.NoError(t, os.WriteFile(binPath, []byte("test"), 0o755))
+
+	resolved, err := SetBrowserBinPath(binPath)
+	assert.NoError(t, err)
+	assert.Equal(t, binPath, resolved)
+	assert.Equal(t, binPath, configuredBrowserBinPath)
+	got, err := BrowserBinPath()
+	assert.NoError(t, err)
+	assert.Equal(t, binPath, got)
+}
+
+func TestSetBrowserBinPathRejectsInvalidPaths(t *testing.T) {
+	original := configuredBrowserBinPath
+	t.Cleanup(func() { configuredBrowserBinPath = original })
+
+	_, err := SetBrowserBinPath(filepath.Join(t.TempDir(), "missing"))
+	assert.ErrorContains(t, err, "浏览器二进制不可用")
+
+	notExecutable := filepath.Join(t.TempDir(), "chrome")
+	assert.NoError(t, os.WriteFile(notExecutable, []byte("test"), 0o644))
+	_, err = SetBrowserBinPath(notExecutable)
+	assert.ErrorContains(t, err, "浏览器二进制不可执行")
 }
 
 // TestOptions 校验 Option 正确写入 browserConfig（New+Option 的接线）。

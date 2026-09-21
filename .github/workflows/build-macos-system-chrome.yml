@@ -1,0 +1,42 @@
+name: Build macOS arm64 with system Chrome support
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: '1.24'
+
+      - name: Test browser selection
+        run: go test ./browser
+
+      - name: Build macOS Apple Silicon binaries
+        run: |
+          mkdir -p dist
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags "-s -w -X main.version=system-chrome-${GITHUB_SHA::7}" -o dist/xiaohongshu-mcp-darwin-arm64 .
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags "-s -w" -o dist/xiaohongshu-login-darwin-arm64 ./cmd/login
+
+      - name: Record provenance and checksums
+        run: |
+          printf 'upstream_repository=xpzouying/xiaohongshu-mcp\nfork_commit=%s\nchange=system Chrome -bin parameter\n' "$GITHUB_SHA" > dist/BUILD-PROVENANCE.txt
+          cd dist
+          shasum -a 256 xiaohongshu-mcp-darwin-arm64 xiaohongshu-login-darwin-arm64 > SHA256SUMS
+
+      - name: Upload macOS arm64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xiaohongshu-mcp-macos-arm64-system-chrome
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

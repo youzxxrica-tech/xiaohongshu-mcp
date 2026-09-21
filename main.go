@@ -18,10 +18,12 @@ func main() {
 		headless bool
 		port     string
 		token    string
+		binPath  string
 	)
 	flag.BoolVar(&headless, "headless", true, "是否无头模式")
 	flag.StringVar(&port, "port", ":18060", "端口")
 	flag.StringVar(&token, "token", "", "鉴权 Token，留空则读取 AUTH_TOKEN")
+	flag.StringVar(&binPath, "bin", "", "浏览器二进制文件路径（留空则使用内置浏览器）")
 	flag.Parse()
 	if token == "" {
 		token = os.Getenv("AUTH_TOKEN")
@@ -29,12 +31,12 @@ func main() {
 
 	logrus.Infof("xiaohongshu-mcp version: %s", version)
 
-	// 只用内置浏览器。启动时就备好，缺它直接退出，不拖到第一个请求才失败。
-	binPath, err := browser.EnsureBrowser()
+	// 启动时解析并校验浏览器，缺它直接退出，不拖到第一个请求才失败。
+	resolvedBinPath, err := browser.SetBrowserBinPath(binPath)
 	if err != nil {
 		logrus.Fatalf("%v", err)
 	}
-	logrus.Infof("using browser binary: %s", binPath)
+	logrus.Infof("using browser binary: %s", resolvedBinPath)
 
 	configs.InitHeadless(headless)
 	// 入口层解析出 seed 和代理，经 configs 透传给浏览器工厂。
