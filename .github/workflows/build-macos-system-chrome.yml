@@ -34,7 +34,7 @@ jobs:
           shasum -a 256 xiaohongshu-mcp-darwin-arm64 xiaohongshu-login-darwin-arm64 > SHA256SUMS
 
       - name: Upload macOS arm64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: xiaohongshu-mcp-macos-arm64-system-chrome
           path: dist/
